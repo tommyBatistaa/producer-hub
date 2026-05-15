@@ -12,44 +12,42 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --bg: #0a0b10;
         }
+
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background: radial-gradient(circle at top right, #1a1c2c, var(--bg)); 
-            color: #e0e0e0; margin: 0; display: flex; min-height: 100vh;
+            color: #e0e0e0; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden;
         }
+
         /* SIDEBAR */
         .sidebar { 
             width: 260px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px);
             border-right: 1px solid var(--glass-border); padding: 30px 20px; 
-            position: fixed; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box;
+            position: fixed; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; z-index: 100;
         }
-        .sidebar h2 { color: var(--primary); text-transform: uppercase; letter-spacing: 3px; font-size: 1.1em; margin-bottom: 40px; }
+        .sidebar h2 { color: var(--primary); text-transform: uppercase; letter-spacing: 3px; font-size: 1.1em; margin-bottom: 40px; text-shadow: 0 0 10px var(--primary-glow); }
+        
         .nav-item { 
             cursor: pointer; padding: 15px; margin-bottom: 10px; border-radius: 10px;
-            transition: 0.3s; border: 1px solid transparent; font-weight: bold;
+            transition: 0.3s; border: 1px solid transparent; font-weight: bold; font-size: 0.9em;
         }
         .nav-item:hover, .nav-item.active { 
-            background: var(--glass); border: 1px solid var(--primary); color: var(--primary);
+            background: var(--glass); border: 1px solid var(--primary); color: var(--primary); box-shadow: 0 0 15px var(--primary-glow);
         }
-        /* DRIVE BUTTON */
+
         .drive-section { margin-top: auto; padding-bottom: 20px; }
         .drive-btn {
             width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border);
-            background: var(--glass); color: #e0e0e0; cursor: pointer; font-size: 0.85em;
+            background: var(--glass); color: #e0e0e0; cursor: pointer; font-size: 0.85em; transition: 0.3s;
         }
         .drive-btn.connected { border-color: #00cc66; color: #00cc66; }
         .sync-indicator { text-align: center; font-size: 0.7em; margin-top: 8px; opacity: 0.6; min-height: 15px; }
         
-        /* MAIN */
-        .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
-        .section { display: none; }
+        /* MAIN CONTENT */
+        .main-content { margin-left: 280px; padding: 40px; width: calc(100% - 320px); max-width: 1000px; }
+        .section { display: none; animation: fadeIn 0.4s ease; }
         .section.active { display: block; }
-        .project-title { background: transparent; font-size: 2.2em; font-weight: 800; color: var(--primary); border: none; border-bottom: 2px solid var(--primary); width: 100%; margin-bottom: 30px; outline: none; }
-        .card { background: var(--glass); border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px; margin-bottom: 25px; }
-        
-        /* GRID DE CUSTOS */
-        .cost-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 15px; }
-        input { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; text-align: center; width: 100%; box-sizing: border-box; }
-        .total-preview { color: var(--primary); font-weight: bold; text-align: right; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .timer-display { font-size:
+        .project-title { background: transparent; font-size: 2.2em; font-weight: 800; color: var(--primary); border: none; border-bottom: 2px solid var(--primary); width: 100%; margin-bottom: 30px; outline: none; }
+        .card { background: var(--glass); border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px; margin-bottom: 25px; backdrop
