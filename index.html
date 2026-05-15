@@ -15,302 +15,41 @@
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background: radial-gradient(circle at top right, #1a1c2c, var(--bg)); 
-            color: #e0e0e0;
-            margin: 0; 
-            display: flex;
-            min-height: 100vh;
+            color: #e0e0e0; margin: 0; display: flex; min-height: 100vh;
         }
+        /* SIDEBAR */
         .sidebar { 
-            width: 260px; 
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(15px);
-            border-right: 1px solid var(--glass-border);
-            padding: 30px 20px; 
-            position: fixed; 
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
+            width: 260px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(15px);
+            border-right: 1px solid var(--glass-border); padding: 30px 20px; 
+            position: fixed; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box;
         }
-        .sidebar h2 { color: var(--primary); text-transform: uppercase; letter-spacing: 3px; font-size: 1.1em; text-shadow: 0 0 10px var(--primary-glow); margin-bottom: 40px; }
+        .sidebar h2 { color: var(--primary); text-transform: uppercase; letter-spacing: 3px; font-size: 1.1em; margin-bottom: 40px; }
         .nav-item { 
-            cursor: pointer; 
-            padding: 15px; 
-            margin-bottom: 10px;
-            border-radius: 10px;
-            transition: 0.3s;
-            border: 1px solid transparent;
-            font-weight: bold;
+            cursor: pointer; padding: 15px; margin-bottom: 10px; border-radius: 10px;
+            transition: 0.3s; border: 1px solid transparent; font-weight: bold;
         }
         .nav-item:hover, .nav-item.active { 
-            background: var(--glass);
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
+            background: var(--glass); border: 1px solid var(--primary); color: var(--primary);
         }
+        /* DRIVE BUTTON */
         .drive-section { margin-top: auto; padding-bottom: 20px; }
         .drive-btn {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid var(--glass-border);
-            background: var(--glass);
-            color: #e0e0e0;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: 0.3s;
+            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--glass-border);
+            background: var(--glass); color: #e0e0e0; cursor: pointer; font-size: 0.85em;
         }
         .drive-btn.connected { border-color: #00cc66; color: #00cc66; }
         .sync-indicator { text-align: center; font-size: 0.7em; margin-top: 8px; opacity: 0.6; min-height: 15px; }
         
+        /* MAIN */
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
-        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section { display: none; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-
         .project-title { background: transparent; font-size: 2.2em; font-weight: 800; color: var(--primary); border: none; border-bottom: 2px solid var(--primary); width: 100%; margin-bottom: 30px; outline: none; }
-        .card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px; margin-bottom: 25px; }
+        .card { background: var(--glass); border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px; margin-bottom: 25px; }
         
-        .cost-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 10px; }
-        .cost-grid label { font-size: 0.9em; opacity: 0.8; }
-        input { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; text-align: center; }
+        /* GRID DE CUSTOS */
+        .cost-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 15px; }
+        input { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; text-align: center; width: 100%; box-sizing: border-box; }
         .total-preview { color: var(--primary); font-weight: bold; text-align: right; }
 
-        .timer-display { font-size: 3em; font-family: monospace; text-align: center; margin: 20px 0; color: var(--primary); }
-        .btn { padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; width: 100%; margin-top: 10px; }
-        .btn-primary { background: var(--primary); color: black; }
-        .btn-save { background: #00cc66; color: white; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: var(--glass); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid var(--glass-border); }
-        .stat-card h4 { margin: 0; opacity: 0.7; font-size: 0.8em; text-transform: uppercase; }
-        .stat-card p { font-size: 1.8em; font-weight: bold; color: var(--primary); margin: 10px 0 0 0; }
-
-        .project-item { display: flex; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--glass-border); }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: black; padding: 12px 25px; border-radius: 8px; display: none; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-<div class="sidebar">
-    <h2>Producer Hub</h2>
-    <div class="nav-item active" onclick="showSection('dashboard', this)">📊 Dashboard</div>
-    <div class="nav-item" onclick="newProject(this)">➕ Novo Projeto</div>
-    
-    <div class="drive-section">
-        <button class="drive-btn" id="drive-btn" onclick="handleDriveAuth()">🔗 Ligar Google Drive</button>
-        <div class="sync-indicator" id="sync-indicator"></div>
-    </div>
-</div>
-
-<div class="main-content">
-    <div id="section-dashboard" class="section active">
-        <div class="stats-grid">
-            <div class="stat-card"><h4>Faturação Bruta</h4><p id="dash-faturacao">0,00 €</p></div>
-            <div class="stat-card"><h4>Projetos</h4><p id="dash-projetos">0</p></div>
-            <div class="stat-card"><h4>Média p/ Proj</h4><p id="dash-media">0,00 €</p></div>
-        </div>
-        <div class="card">
-            <h3>Histórico de Projetos</h3>
-            <div id="project-list"></div>
-        </div>
-    </div>
-
-    <div id="section-projeto" class="section">
-        <input type="text" class="project-title" id="project-name" placeholder="NOME DO PROJETO">
-        
-        <div class="card">
-            <h3>⏳ Cronómetro de Edição</h3>
-            <div class="timer-display" id="timer-text">00:00:00</div>
-            <button id="btn-timer" class="btn btn-primary" onclick="toggleTimer()">Iniciar Gravação</button>
-        </div>
-
-        <div class="card">
-            <h3>💰 Orçamento Detalhado</h3>
-            <div class="cost-grid" style="opacity:0.5; font-size:0.7em; margin-bottom:5px;">
-                <span>Serviço</span><span>Preço/h</span><span>Qtd/h</span><span>Subtotal</span>
-            </div>
-            
-            <div class="cost-grid">
-                <label>Edição Video</label>
-                <input type="number" id="p_edicao" value="20" oninput="calculate()">
-                <input type="number" id="q_edicao" value="0" step="0.1" oninput="calculate()">
-                <div class="total-preview" id="t_edicao">0.00 €</div>
-            </div>
-            <div class="cost-grid">
-                <label>Captação</label>
-                <input type="number" id="p_captacao" value="30" oninput="calculate()">
-                <input type="number" id="q_captacao" value="0" oninput="calculate()">
-                <div class="total-preview" id="t_captacao">0.00 €</div>
-            </div>
-            <div class="cost-grid">
-                <label>Deslocação (km)</label>
-                <input type="number" id="p_km" value="0.40" step="0.01" oninput="calculate()">
-                <input type="number" id="q_km" value="0" oninput="calculate()">
-                <div class="total-preview" id="t_km">0.00 €</div>
-            </div>
-        </div>
-
-        <div class="card" style="border: 2px solid var(--primary);">
-            <div style="display:flex; justify-content:space-between; font-size:1.5em; font-weight:bold;">
-                <span>TOTAL (C/ IVA 23%):</span>
-                <span id="total-final" style="color:var(--primary)">0,00 €</span>
-            </div>
-        </div>
-        
-        <button class="btn btn-save" onclick="saveProject()">💾 Guardar e Sincronizar</button>
-    </div>
-</div>
-
-<div id="toast" class="toast"></div>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script>
-    const GOOGLE_CLIENT_ID = '211869418858-ikdifj8fj9gef21lmu0l52jdtdj1i6ec.apps.googleusercontent.com';
-    
-    let appData = { projects: [] };
-    let currentProjId = null;
-    let accessToken = sessionStorage.getItem('drive_access_token');
-    let isSignedIn = !!accessToken;
-    let driveFileId = null;
-    let tokenClient;
-    let timer, seconds = 0;
-
-    window.onload = () => {
-        const local = localStorage.getItem('producer_data');
-        if(local) appData = JSON.parse(local);
-        updateDashboard();
-        if(isSignedIn) {
-            updateDriveButton(true);
-            setTimeout(syncWithDrive, 1000);
-        }
-        initGoogleAuth();
-    };
-
-    function initGoogleAuth() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/drive.file',
-            callback: (resp) => {
-                accessToken = resp.access_token;
-                sessionStorage.setItem('drive_access_token', accessToken);
-                isSignedIn = true;
-                updateDriveButton(true);
-                syncWithDrive();
-            }
-        });
-    }
-
-    function handleDriveAuth() {
-        if(isSignedIn) syncWithDrive();
-        else tokenClient.requestAccessToken({ prompt: 'consent' });
-    }
-
-    // --- LÓGICA DE NEGÓCIO ---
-    function calculate() {
-        const rows = [
-            {p: 'p_edicao', q: 'q_edicao', t: 't_edicao'},
-            {p: 'p_captacao', q: 'q_captacao', t: 't_captacao'},
-            {p: 'p_km', q: 'q_km', t: 't_km'}
-        ];
-        let totalSemIva = 0;
-        rows.forEach(row => {
-            const val = (parseFloat(document.getElementById(row.p).value)||0) * (parseFloat(document.getElementById(row.q).value)||0);
-            document.getElementById(row.t).innerText = val.toFixed(2) + " €";
-            totalSemIva += val;
-        });
-        document.getElementById('total-final').innerText = (totalSemIva * 1.23).toFixed(2) + " €";
-    }
-
-    function newProject(el) {
-        currentProjId = null;
-        document.getElementById('project-name').value = "";
-        document.getElementById('q_edicao').value = 0;
-        document.getElementById('q_captacao').value = 0;
-        document.getElementById('q_km').value = 0;
-        seconds = 0;
-        updateTimerDisplay();
-        calculate();
-        showSection('projeto', el);
-    }
-
-    function saveProject() {
-        const name = document.getElementById('project-name').value || "Projeto Sem Nome";
-        const total = parseFloat(document.getElementById('total-final').innerText);
-        
-        const proj = { id: currentProjId || Date.now(), name, total, date: new Date().toLocaleDateString() };
-        
-        const idx = appData.projects.findIndex(p => p.id === proj.id);
-        if(idx > -1) appData.projects[idx] = proj;
-        else appData.projects.push(proj);
-        
-        localStorage.setItem('producer_data', JSON.stringify(appData));
-        updateDashboard();
-        if(isSignedIn) uploadToDrive();
-        showToast("✅ Guardado!");
-    }
-
-    function updateDashboard() {
-        const list = document.getElementById('project-list');
-        const totalFaturado = appData.projects.reduce((acc, p) => acc + p.total, 0);
-        
-        document.getElementById('dash-faturacao').innerText = totalFaturado.toFixed(2) + " €";
-        document.getElementById('dash-projetos').innerText = appData.projects.length;
-        document.getElementById('dash-media').innerText = appData.projects.length ? (totalFaturado/appData.projects.length).toFixed(2) + " €" : "0.00 €";
-        
-        list.innerHTML = appData.projects.slice().reverse().map(p => `
-            <div class="project-item">
-                <span>${p.name} <small>(${p.date})</small></span>
-                <b style="color:var(--primary)">${p.total.toFixed(2)}€</b>
-            </div>
-        `).join('');
-    }
-
-    // --- GOOGLE DRIVE ---
-    async function syncWithDrive() {
-        setSyncStatus('🔄 Sincronizando...');
-        try {
-            const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='producer-hub-data.json'`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            }).then(res => res.json());
-            
-            if(r.files && r.files.length > 0) {
-                driveFileId = r.files[0].id;
-                const data = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                }).then(res => res.json());
-                appData = data;
-                localStorage.setItem('producer_data', JSON.stringify(appData));
-                updateDashboard();
-                setSyncStatus('✅ Sincronizado');
-            } else {
-                uploadToDrive();
-            }
-        } catch(e) { setSyncStatus('⚠️ Erro Drive'); }
-    }
-
-    async function uploadToDrive() {
-        const metadata = { name: 'producer-hub-data.json', mimeType: 'application/json' };
-        const formData = new FormData();
-        formData.append('metadata', new Blob([JSON.stringify(metadata)], {type:'application/json'}));
-        formData.append('file', new Blob([JSON.stringify(appData)], {type:'application/json'}));
-
-        fetch(driveFileId ? `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart` : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
-            method: driveFileId ? 'PATCH' : 'POST',
-            headers: { Authorization: `Bearer ${accessToken}` },
-            body: formData
-        }).then(res => res.json()).then(res => { driveFileId = res.id; setSyncStatus('✅ Guardado no Drive'); });
-    }
-
-    // --- UTILITÁRIOS ---
-    function showSection(id, el) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById('section-'+id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function toggleTimer() {
-        const btn = document.getElementById('btn-timer');
-        if(btn.innerText.includes("Iniciar")) {
-            btn.innerText = "Pausar Gravação"; btn
+        .timer-display { font-size:
