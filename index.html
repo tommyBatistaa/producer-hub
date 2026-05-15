@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -79,8 +80,7 @@
             box-sizing: border-box;
         }
 
-        .drive-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .drive-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .drive-btn:hover { border-color: var(--primary); color: var(--primary); }
         .drive-btn.connected { border-color: #00cc66; color: #00cc66; }
 
         .sync-indicator {
@@ -176,6 +176,30 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.error { border-color: #ff4444; color: #ff4444; }
         .toast.success { border-color: #00cc66; color: #00cc66; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #1a1c2c;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal h2 { color: var(--primary); margin-bottom: 15px; }
+        .modal p { opacity: 0.7; margin-bottom: 25px; line-height: 1.6; }
+        .modal-btns { display: flex; gap: 15px; justify-content: center; }
     </style>
 </head>
 <body>
@@ -187,8 +211,8 @@
     <div class="nav-item" onclick="showSection('contabilidade', this)">🧾 Contabilidade</div>
 
     <div class="drive-status">
-        <button class="drive-btn" id="drive-btn" onclick="handleDriveAuth()" disabled>
-            ⌛ A carregar Google...
+        <button class="drive-btn" id="drive-btn" onclick="handleDriveAuth()">
+            🔗 Ligar Google Drive
         </button>
         <div class="sync-indicator" id="sync-indicator"></div>
     </div>
@@ -196,6 +220,7 @@
 
 <div class="main-content">
     
+    <!-- DASHBOARD -->
     <div id="section-dashboard" class="section active">
         <h1>📊 Estatísticas Globais</h1>
         <div class="stats-grid">
@@ -209,8 +234,9 @@
         </div>
     </div>
 
+    <!-- PROJETO -->
     <div id="section-projeto" class="section">
-        <input type="text" class="project-title" id="project-name" value="NOVO PROJETO" oninput="autoSave()">
+        <input type="text" class="project-title" id="project-name" value="ROAD TRIP NACIONAL 2" oninput="autoSave()">
         
         <div class="card">
             <h3>📅 Datas de Produção</h3>
@@ -238,7 +264,7 @@
             <div class="cost-grid">
                 <span>Dias de LIVE</span>
                 <input type="number" id="p_live" value="200" oninput="calculate()">
-                <input type="number" id="q_live" value="0" oninput="calculate()">
+                <input type="number" id="q_live" value="7" oninput="calculate()">
                 <input type="text" id="t_live" class="total-field" readonly>
             </div>
             <div class="cost-grid">
@@ -268,7 +294,7 @@
             <div class="cost-grid">
                 <span>Deslocação (km)</span>
                 <input type="number" id="p_km" value="0.40" step="0.01" oninput="calculate()">
-                <input type="number" id="q_km" value="0" oninput="calculate()">
+                <input type="number" id="q_km" value="193.4" oninput="calculate()">
                 <input type="text" id="t_km" class="total-field" readonly>
             </div>
         </div>
@@ -284,6 +310,7 @@
         </div>
     </div>
 
+    <!-- CONTABILIDADE -->
     <div id="section-contabilidade" class="section">
         <h1>🧾 Contabilidade & Despesas</h1>
         <div class="card">
@@ -299,24 +326,49 @@
     </div>
 </div>
 
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- MODAL GOOGLE DRIVE -->
+<div class="modal-overlay" id="modal-drive">
+    <div class="modal">
+        <h2>🔗 Google Drive</h2>
+        <p>Os teus dados serão guardados automaticamente num ficheiro <strong>producer-hub-data.json</strong> no teu Google Drive.</p>
+        <div class="modal-btns">
+            <button class="btn btn-start" onclick="connectDrive()">Ligar conta</button>
+            <button class="btn btn-adjust" onclick="closeModal('modal-drive')">Cancelar</button>
+        </div>
+    </div>
+</div>
 
 <script>
 // ============================================================
 // CONFIGURAÇÃO GOOGLE DRIVE API
+// Substitui com o teu CLIENT_ID após criar projeto no Google Cloud
 // ============================================================
 const GOOGLE_CLIENT_ID = '211869418858-ikdifj8fj9gef21lmu0l52jdtdj1i6ec.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILE_NAME = 'producer-hub-data.json';
 
-let appData = { projects: [], despesas: [], currentProjectId: null };
+// ============================================================
+// ESTADO GLOBAL DA APP
+// ============================================================
+let appData = {
+    projects: [],
+    despesas: [],
+    currentProjectId: null
+};
+
 let driveFileId = null;
 let tokenClient = null;
 let accessToken = null;
 let isSignedIn = false;
 let autoSaveTimeout = null;
 
-window.onload = () => {
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+window.onload = async () => {
     loadFromLocalStorage();
     calculate();
     updateDashboard();
@@ -324,132 +376,411 @@ window.onload = () => {
     loadGoogleAPI();
 };
 
-function loadGoogleAPI() {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = initGoogleAuth;
-    document.head.appendChild(script);
-}
-
-function initGoogleAuth() {
-    try {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: SCOPES,
-            callback: async (resp) => {
-                if (resp.error) return showToast("Erro: " + resp.error, "error");
-                accessToken = resp.access_token;
-                isSignedIn = true;
-                updateDriveButton(true);
-                showToast("✅ Drive Ligado!", "success");
-                await syncWithDrive();
-            },
-        });
-        const btn = document.getElementById('drive-btn');
-        btn.disabled = false;
-        btn.textContent = "🔗 Ligar Google Drive";
-    } catch (e) {
-        console.error("Erro init:", e);
-    }
-}
-
-function handleDriveAuth() {
-    if (!tokenClient) return showToast("Google ainda a carregar...", "error");
-    if (isSignedIn) syncWithDrive();
-    else tokenClient.requestAccessToken({ prompt: 'select_account' });
-}
-
-async function syncWithDrive() {
-    if (!accessToken) return;
-    setSyncIndicator('🔄 A sincronizar...');
-    try {
-        const search = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}' and trashed=false`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        const data = await search.json();
-        if (data.files && data.files.length > 0) {
-            driveFileId = data.files[0].id;
-            const file = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
-            appData = await file.json();
-            saveToLocalStorage();
-            updateDashboard();
-            renderDespesas();
-            if (appData.currentProjectId) {
-                const p = appData.projects.find(x => x.id === appData.currentProjectId);
-                if (p) loadProjectIntoForm(p);
-            }
-            setSyncIndicator('✅ Sincronizado');
-        } else {
-            await uploadToDrive();
-        }
-    } catch (e) { setSyncIndicator('❌ Erro Sync'); }
-}
-
-async function uploadToDrive() {
-    if (!accessToken) return;
-    const blob = new Blob([JSON.stringify(appData)], { type: 'application/json' });
-    try {
-        if (driveFileId) {
-            await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
-                method: 'PATCH', headers: { Authorization: `Bearer ${accessToken}` }, body: blob
-            });
-        } else {
-            const meta = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
-            form.append('file', blob);
-            const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: form
-            });
-            const d = await res.json();
-            driveFileId = d.id;
-        }
-        setSyncIndicator('☁️ No Drive');
-    } catch (e) { setSyncIndicator('❌ Erro Upload'); }
-}
-
-// RESTO DAS FUNÇÕES DE LÓGICA (CALCULO, DASHBOARD, ETC)
 function loadFromLocalStorage() {
-    const s = localStorage.getItem('producer-hub-data');
-    if (s) appData = JSON.parse(s);
+    const saved = localStorage.getItem('producer-hub-data');
+    if (saved) {
+        try {
+            appData = JSON.parse(saved);
+            if (appData.currentProjectId) {
+                const proj = appData.projects.find(p => p.id === appData.currentProjectId);
+                if (proj) loadProjectIntoForm(proj);
+            }
+        } catch(e) {}
+    }
 }
 
 function saveToLocalStorage() {
     localStorage.setItem('producer-hub-data', JSON.stringify(appData));
 }
 
-function updateDriveButton(c) {
-    const b = document.getElementById('drive-btn');
-    b.textContent = c ? "✅ Sincronizar Agora" : "🔗 Ligar Google Drive";
-    if (c) b.classList.add('connected');
+// ============================================================
+// GOOGLE DRIVE AUTH
+// ============================================================
+function loadGoogleAPI() {
+    if (GOOGLE_CLIENT_ID === 'COLOCA_AQUI_O_TEU_CLIENT_ID') {
+        setSyncIndicator('⚠️ Drive não configurado');
+        return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.onload = initGoogleAuth;
+    document.head.appendChild(script);
 }
 
-function setSyncIndicator(m) { document.getElementById('sync-indicator').textContent = m; }
-
-function calculate() {
-    const ids = ['live', '3d', 'ai', 'edicao', 'film', 'km'];
-    let total = 0;
-    ids.forEach(id => {
-        const p = parseFloat(document.getElementById('p_'+id).value) || 0;
-        const q = parseFloat(document.getElementById('q_'+id).value) || 0;
-        const sub = p * q;
-        document.getElementById('t_'+id).value = sub.toFixed(2) + " €";
-        total += sub;
+function initGoogleAuth() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: SCOPES,
+        callback: async (response) => {
+            if (response.error) { showToast('Erro de autenticação', 'error'); return; }
+            accessToken = response.access_token;
+            isSignedIn = true;
+            updateDriveButton(true);
+            showToast('✅ Google Drive ligado!', 'success');
+            await syncWithDrive();
+        },
     });
-    document.getElementById('total-final').innerText = total.toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
-    document.getElementById('total-iva').innerText = (total * 1.23).toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
 }
 
-function saveProject() {
-    const proj = {
+function handleDriveAuth() {
+    if (GOOGLE_CLIENT_ID === 'COLOCA_AQUI_O_TEU_CLIENT_ID') {
+        document.getElementById('modal-drive').classList.add('show');
+        return;
+    }
+    if (isSignedIn) {
+        syncWithDrive();
+    } else {
+        tokenClient.requestAccessToken({ prompt: '' });
+    }
+}
+
+function connectDrive() {
+    closeModal('modal-drive');
+    showToast('Segue o guia no README para configurar o Google Drive', 'error');
+}
+
+function updateDriveButton(connected) {
+    const btn = document.getElementById('drive-btn');
+    if (connected) {
+        btn.textContent = '✅ Drive Ligado — Sincronizar';
+        btn.className = 'drive-btn connected';
+    } else {
+        btn.textContent = '🔗 Ligar Google Drive';
+        btn.className = 'drive-btn';
+    }
+}
+
+// ============================================================
+// SYNC COM GOOGLE DRIVE
+// ============================================================
+async function syncWithDrive() {
+    if (!accessToken) return;
+    setSyncIndicator('🔄 A sincronizar...');
+    try {
+        // Procurar ficheiro existente
+        const searchRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}' and trashed=false&fields=files(id,name)`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        const searchData = await searchRes.json();
+
+        if (searchData.files && searchData.files.length > 0) {
+            driveFileId = searchData.files[0].id;
+            // Carregar dados do Drive
+            const fileRes = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            const driveData = await fileRes.json();
+            appData = driveData;
+            saveToLocalStorage();
+            updateDashboard();
+            renderDespesas();
+            if (appData.currentProjectId) {
+                const proj = appData.projects.find(p => p.id === appData.currentProjectId);
+                if (proj) loadProjectIntoForm(proj);
+            }
+            setSyncIndicator('✅ Sincronizado');
+        } else {
+            // Criar ficheiro novo no Drive
+            await uploadToDrive();
+            setSyncIndicator('☁️ Ficheiro criado no Drive');
+        }
+    } catch(e) {
+        setSyncIndicator('❌ Erro de sincronização');
+        console.error('Sync error:', e);
+    }
+}
+
+async function uploadToDrive() {
+    if (!accessToken) return;
+    const content = JSON.stringify(appData);
+
+    if (driveFileId) {
+        // Atualizar ficheiro existente
+        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: { 
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: content
+        });
+    } else {
+        // Criar ficheiro novo
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' })], { type: 'application/json' }));
+        form.append('file', new Blob([content], { type: 'application/json' }));
+        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}` },
+            body: form
+        });
+        const data = await res.json();
+        driveFileId = data.id;
+    }
+    setSyncIndicator('☁️ Guardado no Drive');
+}
+
+function setSyncIndicator(msg) {
+    document.getElementById('sync-indicator').textContent = msg;
+}
+
+// ============================================================
+// GESTÃO DE PROJETOS
+// ============================================================
+function getCurrentProjectData() {
+    return {
         id: appData.currentProjectId || Date.now().toString(),
         name: document.getElementById('project-name').value,
         dates: selectedDates,
         elapsedTime: elapsedTime,
         prices: {
             p_live: val('p_live'), q_live: val('q_live'),
-            p_3d: val('p_3d'), q_3d: val('q_3
+            p_3d: val('p_3d'), q_3d: val('q_3d'),
+            p_ai: val('p_ai'), q_ai: val('q_ai'),
+            p_edicao: val('p_edicao'), q_edicao: val('q_edicao'),
+            p_film: val('p_film'), q_film: val('q_film'),
+            p_km: val('p_km'), q_km: val('q_km'),
+        },
+        total: calcTotal(),
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function calcTotal() {
+    const ids = ['live', '3d', 'ai', 'edicao', 'film', 'km'];
+    return ids.reduce((sum, id) => sum + (val('p_' + id) * val('q_' + id)), 0);
+}
+
+function saveProject() {
+    const proj = getCurrentProjectData();
+    const idx = appData.projects.findIndex(p => p.id === proj.id);
+    if (idx >= 0) {
+        appData.projects[idx] = proj;
+    } else {
+        appData.projects.push(proj);
+    }
+    appData.currentProjectId = proj.id;
+    saveToLocalStorage();
+    updateDashboard();
+    if (isSignedIn) uploadToDrive();
+    showToast('💾 Projeto guardado!', 'success');
+}
+
+function loadProjectIntoForm(proj) {
+    document.getElementById('project-name').value = proj.name || '';
+    selectedDates = proj.dates || [];
+    renderDates();
+    elapsedTime = proj.elapsedTime || 0;
+    updateTimerDisplay();
+    if (proj.prices) {
+        Object.keys(proj.prices).forEach(key => {
+            const el = document.getElementById(key);
+            if (el) el.value = proj.prices[key];
+        });
+    }
+    appData.currentProjectId = proj.id;
+    calculate();
+}
+
+function openProject(id) {
+    const proj = appData.projects.find(p => p.id === id);
+    if (proj) {
+        loadProjectIntoForm(proj);
+        showSection('projeto', document.querySelectorAll('.nav-item')[1]);
+    }
+}
+
+function newProject() {
+    appData.currentProjectId = null;
+    document.getElementById('project-name').value = 'NOVO PROJETO';
+    selectedDates = [];
+    renderDates();
+    elapsedTime = 0;
+    updateTimerDisplay();
+    ['live','3d','ai','edicao','film','km'].forEach(id => {
+        document.getElementById('q_' + id).value = 0;
+    });
+    calculate();
+}
+
+function autoSave() {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => saveProject(), 2000);
+}
+
+function updateDashboard() {
+    const total = appData.projects.reduce((sum, p) => sum + (p.total || 0), 0);
+    const despTotal = appData.despesas.reduce((sum, d) => sum + (d.valor || 0), 0);
+    document.getElementById('dash-faturacao').textContent = total.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+    document.getElementById('dash-projetos').textContent = appData.projects.length;
+    document.getElementById('dash-despesas').textContent = despTotal.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+
+    const list = document.getElementById('project-list');
+    if (appData.projects.length === 0) {
+        list.innerHTML = '<p style="opacity:0.5">Sem projetos guardados.</p>';
+        return;
+    }
+    list.innerHTML = appData.projects.map(p => `
+        <div class="project-list-item" onclick="openProject('${p.id}')">
+            <span class="proj-name">${p.name}</span>
+            <span class="proj-total">${(p.total * 1.23).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}</span>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// DESPESAS
+// ============================================================
+function addDespesa() {
+    const desc = document.getElementById('despesa-desc').value.trim();
+    const valor = parseFloat(document.getElementById('despesa-valor').value) || 0;
+    if (!desc || !valor) { showToast('Preenche descrição e valor', 'error'); return; }
+    appData.despesas.push({ id: Date.now().toString(), desc, valor, date: new Date().toISOString() });
+    document.getElementById('despesa-desc').value = '';
+    document.getElementById('despesa-valor').value = '';
+    saveToLocalStorage();
+    updateDashboard();
+    renderDespesas();
+    if (isSignedIn) uploadToDrive();
+    showToast('✅ Despesa adicionada!', 'success');
+}
+
+function renderDespesas() {
+    const list = document.getElementById('despesas-list');
+    if (!appData.despesas || appData.despesas.length === 0) {
+        list.innerHTML = '<p style="opacity:0.5">Sem despesas registadas.</p>';
+        return;
+    }
+    list.innerHTML = appData.despesas.map(d => `
+        <div style="display:flex; justify-content:space-between; padding:12px; border-radius:8px; border:1px solid var(--glass-border); margin-bottom:8px;">
+            <span>${d.desc}</span>
+            <span style="color:var(--primary); font-weight:bold;">${d.valor.toFixed(2)} €</span>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+function showSection(sectionId, element) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + sectionId).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    if (element) element.classList.add('active');
+}
+
+// ============================================================
+// CALENDÁRIO
+// ============================================================
+let selectedDates = [];
+
+function addDate() {
+    const picker = document.getElementById('calendar-picker');
+    if (picker.value && !selectedDates.includes(picker.value)) {
+        selectedDates.push(picker.value);
+        renderDates();
+        autoSave();
+    }
+}
+function removeDate(index) {
+    selectedDates.splice(index, 1);
+    renderDates();
+    autoSave();
+}
+function renderDates() {
+    const container = document.getElementById('selected-dates-container');
+    container.innerHTML = selectedDates.map((d, i) => 
+        `<span class="date-chip">${d} <b onclick="removeDate(${i})" style="cursor:pointer;margin-left:5px">&times;</b></span>`
+    ).join('');
+}
+
+// ============================================================
+// TEMPORIZADOR
+// ============================================================
+let timerInterval;
+let elapsedTime = 0;
+let isRunning = false;
+
+function toggleTimer() {
+    const btn = document.getElementById('btn-timer');
+    if (!isRunning) {
+        isRunning = true;
+        btn.textContent = "Pausar Edição";
+        btn.className = "btn btn-pause";
+        let startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(() => {
+            elapsedTime = Date.now() - startTime;
+            updateTimerDisplay();
+        }, 100);
+    } else {
+        isRunning = false;
+        btn.textContent = "Retomar Edição";
+        btn.className = "btn btn-start";
+        clearInterval(timerInterval);
+        calculate();
+        autoSave();
+    }
+}
+
+function updateTimerDisplay() {
+    let totalSeconds = Math.floor(elapsedTime / 1000);
+    let h = Math.floor(totalSeconds / 3600);
+    let m = Math.floor((totalSeconds % 3600) / 60);
+    let s = totalSeconds % 60;
+    document.getElementById('timer-text').textContent = 
+        `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    document.getElementById('q_edicao').value = (elapsedTime / 3600000).toFixed(2);
+    calculate();
+}
+
+function manualAdjust() {
+    let v = prompt("Horas (ex: 1.5):", (elapsedTime / 3600000).toFixed(2));
+    if (v !== null) { elapsedTime = parseFloat(v) * 3600000; updateTimerDisplay(); autoSave(); }
+}
+
+function calculateFromInput() {
+    let v = parseFloat(document.getElementById('q_edicao').value) || 0;
+    elapsedTime = v * 3600000;
+    updateTimerDisplay();
+}
+
+// ============================================================
+// CÁLCULOS
+// ============================================================
+function calculate() {
+    const ids = ['live', '3d', 'ai', 'edicao', 'film', 'km'];
+    let total = 0;
+    ids.forEach(id => {
+        const p = val('p_' + id);
+        const q = val('q_' + id);
+        const sub = p * q;
+        document.getElementById('t_' + id).value = sub.toFixed(2) + " €";
+        total += sub;
+    });
+    document.getElementById('total-final').innerText = total.toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
+    document.getElementById('total-iva').innerText = (total * 1.23).toLocaleString('pt-PT', {style:'currency', currency:'EUR'});
+}
+
+// ============================================================
+// UTILITÁRIOS
+// ============================================================
+function showToast(msg, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show ' + type;
+    setTimeout(() => toast.className = 'toast', 3000);
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+}
+
+calculate();
+</script>
+
+</body>
+</html>
