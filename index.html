@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -345,7 +346,7 @@
 // CONFIGURAÇÃO GOOGLE DRIVE API
 // Substitui com o teu CLIENT_ID após criar projeto no Google Cloud
 // ============================================================
-const GOOGLE_CLIENT_ID = '211869418858-ikdifj8fj9gef21lmu0l52jdtdj1i6ec.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = 'COLOCA_AQUI_O_TEU_CLIENT_ID';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILE_NAME = 'producer-hub-data.json';
 
@@ -360,6 +361,7 @@ let appData = {
 
 let driveFileId = null;
 let tokenClient = null;
+let accessToken = null;
 let isSignedIn = false;
 let autoSaveTimeout = null;
 
@@ -411,6 +413,7 @@ function initGoogleAuth() {
         scope: SCOPES,
         callback: async (response) => {
             if (response.error) { showToast('Erro de autenticação', 'error'); return; }
+            accessToken = response.access_token;
             isSignedIn = true;
             updateDriveButton(true);
             showToast('✅ Google Drive ligado!', 'success');
@@ -427,7 +430,7 @@ function handleDriveAuth() {
     if (isSignedIn) {
         syncWithDrive();
     } else {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
+        tokenClient.requestAccessToken({ prompt: '' });
     }
 }
 
@@ -451,12 +454,13 @@ function updateDriveButton(connected) {
 // SYNC COM GOOGLE DRIVE
 // ============================================================
 async function syncWithDrive() {
+    if (!accessToken) return;
     setSyncIndicator('🔄 A sincronizar...');
     try {
         // Procurar ficheiro existente
         const searchRes = await fetch(
             `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}' and trashed=false&fields=files(id,name)`,
-            { headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` } }
+            { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         const searchData = await searchRes.json();
 
@@ -465,7 +469,7 @@ async function syncWithDrive() {
             // Carregar dados do Drive
             const fileRes = await fetch(
                 `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
-                { headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` } }
+                { headers: { Authorization: `Bearer ${accessToken}` } }
             );
             const driveData = await fileRes.json();
             appData = driveData;
@@ -480,24 +484,24 @@ async function syncWithDrive() {
         } else {
             // Criar ficheiro novo no Drive
             await uploadToDrive();
+            setSyncIndicator('☁️ Ficheiro criado no Drive');
         }
     } catch(e) {
         setSyncIndicator('❌ Erro de sincronização');
-        console.error(e);
+        console.error('Sync error:', e);
     }
 }
 
 async function uploadToDrive() {
-    const token = gapi.client.getToken().access_token;
+    if (!accessToken) return;
     const content = JSON.stringify(appData);
-    const blob = new Blob([content], { type: 'application/json' });
 
     if (driveFileId) {
         // Atualizar ficheiro existente
         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
             method: 'PATCH',
             headers: { 
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
             body: content
@@ -506,10 +510,10 @@ async function uploadToDrive() {
         // Criar ficheiro novo
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify({ name: DRIVE_FILE_NAME, mimeType: 'application/json' })], { type: 'application/json' }));
-        form.append('file', blob);
+        form.append('file', new Blob([content], { type: 'application/json' }));
         const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
             body: form
         });
         const data = await res.json();
