@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Producer Hub - Pro System</title>
-    <link rel="manifest" href="manifest.json">
     <style>
         :root { 
             --primary: #ffcc00; 
@@ -20,17 +19,17 @@
             margin: 0; 
             display: flex;
             min-height: 100vh;
-            overflow-x: hidden;
         }
         .sidebar { 
-            width: 250px; 
+            width: 260px; 
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(15px);
             border-right: 1px solid var(--glass-border);
             padding: 30px 20px; 
             position: fixed; 
             height: 100vh;
-            z-index: 100;
+            display: flex;
+            flex-direction: column;
             box-sizing: border-box;
         }
         .sidebar h2 { color: var(--primary); text-transform: uppercase; letter-spacing: 3px; font-size: 1.1em; text-shadow: 0 0 10px var(--primary-glow); margin-bottom: 40px; }
@@ -42,7 +41,6 @@
             transition: 0.3s;
             border: 1px solid transparent;
             font-weight: bold;
-            font-size: 0.9em;
         }
         .nav-item:hover, .nav-item.active { 
             background: var(--glass);
@@ -50,7 +48,7 @@
             color: var(--primary);
             box-shadow: 0 0 15px var(--primary-glow);
         }
-        .drive-status { position: absolute; bottom: 30px; left: 20px; right: 20px; }
+        .drive-section { margin-top: auto; padding-bottom: 20px; }
         .drive-btn {
             width: 100%;
             padding: 12px;
@@ -60,36 +58,36 @@
             color: #e0e0e0;
             cursor: pointer;
             font-size: 0.85em;
-            text-align: center;
             transition: 0.3s;
-            box-sizing: border-box;
         }
         .drive-btn.connected { border-color: #00cc66; color: #00cc66; }
-        .sync-indicator { text-align: center; font-size: 0.75em; margin-top: 8px; opacity: 0.6; min-height: 18px; }
-        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 330px); }
-        .section { display: none; animation: fadeIn 0.5s ease; }
+        .sync-indicator { text-align: center; font-size: 0.7em; margin-top: 8px; opacity: 0.6; min-height: 15px; }
+        
+        .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
+        .section { display: none; animation: fadeIn 0.4s ease; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
         .project-title { background: transparent; font-size: 2.2em; font-weight: 800; color: var(--primary); border: none; border-bottom: 2px solid var(--primary); width: 100%; margin-bottom: 30px; outline: none; }
         .card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); padding: 25px; border-radius: 20px; margin-bottom: 25px; }
-        h3 { color: var(--primary); font-size: 0.9em; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
-        .cost-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr; gap: 15px; align-items: center; margin-bottom: 12px; }
-        input { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .total-field { background: rgba(255, 204, 0, 0.1) !important; color: var(--primary) !important; font-weight: bold; text-align: right; }
-        .timer-display { font-size: 3.5em; font-family: monospace; text-align: center; padding: 20px; color: var(--primary); text-shadow: 0 0 20px var(--primary-glow); }
-        .btn { padding: 14px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; border: 1px solid var(--primary); transition: 0.3s; }
-        .btn-start { background: var(--primary); color: black; }
-        .btn-pause { background: #ff4444; color: white; border-color: #ff4444; }
-        .btn-save { background: #00cc66; color: black; border-color: #00cc66; }
-        .date-chip { display: inline-block; background: var(--primary); color: black; padding: 6px 14px; border-radius: 20px; font-weight: bold; margin: 5px; font-size: 0.8em; }
-        .results-box { background: rgba(255, 204, 0, 0.05); border: 1px solid var(--primary-glow); padding: 30px; border-radius: 20px; }
-        .grand-total { font-size: 2em; color: var(--primary); font-weight: 900; }
+        
+        .cost-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; align-items: center; margin-bottom: 10px; }
+        .cost-grid label { font-size: 0.9em; opacity: 0.8; }
+        input { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; text-align: center; }
+        .total-preview { color: var(--primary); font-weight: bold; text-align: right; }
+
+        .timer-display { font-size: 3em; font-family: monospace; text-align: center; margin: 20px 0; color: var(--primary); }
+        .btn { padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; width: 100%; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: black; }
+        .btn-save { background: #00cc66; color: white; }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: var(--glass); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid var(--glass-border); }
+        .stat-card h4 { margin: 0; opacity: 0.7; font-size: 0.8em; text-transform: uppercase; }
         .stat-card p { font-size: 1.8em; font-weight: bold; color: var(--primary); margin: 10px 0 0 0; }
-        .project-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-radius: 10px; border: 1px solid var(--glass-border); margin-bottom: 10px; cursor: pointer; }
-        .toast { position: fixed; bottom: 30px; right: 30px; background: #1a1c2c; border: 1px solid var(--primary); color: var(--primary); padding: 15px 25px; border-radius: 12px; opacity: 0; transition: 0.3s; z-index: 9999; }
-        .toast.show { opacity: 1; }
+
+        .project-item { display: flex; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--glass-border); }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: black; padding: 12px 25px; border-radius: 8px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -97,10 +95,9 @@
 <div class="sidebar">
     <h2>Producer Hub</h2>
     <div class="nav-item active" onclick="showSection('dashboard', this)">📊 Dashboard</div>
-    <div class="nav-item" onclick="showSection('projeto', this)">➕ Novo Projeto</div>
-    <div class="nav-item" onclick="showSection('contabilidade', this)">🧾 Contabilidade</div>
-
-    <div class="drive-status">
+    <div class="nav-item" onclick="newProject(this)">➕ Novo Projeto</div>
+    
+    <div class="drive-section">
         <button class="drive-btn" id="drive-btn" onclick="handleDriveAuth()">🔗 Ligar Google Drive</button>
         <div class="sync-indicator" id="sync-indicator"></div>
     </div>
@@ -108,63 +105,84 @@
 
 <div class="main-content">
     <div id="section-dashboard" class="section active">
-        <h1>📊 Estatísticas Globais</h1>
         <div class="stats-grid">
-            <div class="stat-card"><h4>Faturação Total</h4><p id="dash-faturacao">0,00 €</p></div>
+            <div class="stat-card"><h4>Faturação Bruta</h4><p id="dash-faturacao">0,00 €</p></div>
             <div class="stat-card"><h4>Projetos</h4><p id="dash-projetos">0</p></div>
-            <div class="stat-card"><h4>Despesas</h4><p id="dash-despesas">0,00 €</p></div>
+            <div class="stat-card"><h4>Média p/ Proj</h4><p id="dash-media">0,00 €</p></div>
         </div>
         <div class="card">
-            <h3>Projetos Guardados</h3>
+            <h3>Histórico de Projetos</h3>
             <div id="project-list"></div>
         </div>
     </div>
 
     <div id="section-projeto" class="section">
-        <input type="text" class="project-title" id="project-name" value="NOVO PROJETO" oninput="autoSave()">
+        <input type="text" class="project-title" id="project-name" placeholder="NOME DO PROJETO">
+        
         <div class="card">
-            <h3>⏳ Time Tracking</h3>
+            <h3>⏳ Cronómetro de Edição</h3>
             <div class="timer-display" id="timer-text">00:00:00</div>
-            <button id="btn-timer" class="btn btn-start" onclick="toggleTimer()" style="width:100%">Iniciar Sessão</button>
+            <button id="btn-timer" class="btn btn-primary" onclick="toggleTimer()">Iniciar Gravação</button>
         </div>
+
         <div class="card">
-            <h3>💰 Orçamento</h3>
+            <h3>💰 Orçamento Detalhado</h3>
+            <div class="cost-grid" style="opacity:0.5; font-size:0.7em; margin-bottom:5px;">
+                <span>Serviço</span><span>Preço/h</span><span>Qtd/h</span><span>Subtotal</span>
+            </div>
+            
             <div class="cost-grid">
-                <span>Edição (h)</span>
+                <label>Edição Video</label>
                 <input type="number" id="p_edicao" value="20" oninput="calculate()">
-                <input type="number" id="q_edicao" value="0" step="0.01" oninput="calculate()">
-                <input type="text" id="t_edicao" class="total-field" readonly>
+                <input type="number" id="q_edicao" value="0" step="0.1" oninput="calculate()">
+                <div class="total-preview" id="t_edicao">0.00 €</div>
             </div>
+            <div class="cost-grid">
+                <label>Captação</label>
+                <input type="number" id="p_captacao" value="30" oninput="calculate()">
+                <input type="number" id="q_captacao" value="0" oninput="calculate()">
+                <div class="total-preview" id="t_captacao">0.00 €</div>
             </div>
-        <div class="results-box">
-            <div class="grand-total" style="display: flex; justify-content: space-between;">
-                <span>TOTAL C/ IVA:</span><span id="total-iva">0,00 €</span>
+            <div class="cost-grid">
+                <label>Deslocação (km)</label>
+                <input type="number" id="p_km" value="0.40" step="0.01" oninput="calculate()">
+                <input type="number" id="q_km" value="0" oninput="calculate()">
+                <div class="total-preview" id="t_km">0.00 €</div>
             </div>
         </div>
-        <br>
-        <button class="btn btn-save" onclick="saveProject()" style="width:100%">💾 Guardar Projeto</button>
+
+        <div class="card" style="border: 2px solid var(--primary);">
+            <div style="display:flex; justify-content:space-between; font-size:1.5em; font-weight:bold;">
+                <span>TOTAL (C/ IVA 23%):</span>
+                <span id="total-final" style="color:var(--primary)">0,00 €</span>
+            </div>
+        </div>
+        
+        <button class="btn btn-save" onclick="saveProject()">💾 Guardar e Sincronizar</button>
     </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div id="toast" class="toast"></div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
     const GOOGLE_CLIENT_ID = '211869418858-ikdifj8fj9gef21lmu0l52jdtdj1i6ec.apps.googleusercontent.com';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
-    let appData = { projects: [], despesas: [], currentProjectId: null };
+    
+    let appData = { projects: [] };
+    let currentProjId = null;
     let accessToken = sessionStorage.getItem('drive_access_token');
     let isSignedIn = !!accessToken;
     let driveFileId = null;
     let tokenClient;
+    let timer, seconds = 0;
 
     window.onload = () => {
-        loadFromLocalStorage();
+        const local = localStorage.getItem('producer_data');
+        if(local) appData = JSON.parse(local);
         updateDashboard();
-        if (isSignedIn) {
+        if(isSignedIn) {
             updateDriveButton(true);
-            setTimeout(() => syncWithDrive(), 1500); 
+            setTimeout(syncWithDrive, 1000);
         }
         initGoogleAuth();
     };
@@ -172,68 +190,119 @@
     function initGoogleAuth() {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
-            scope: SCOPES,
-            callback: async (resp) => {
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (resp) => {
                 accessToken = resp.access_token;
                 sessionStorage.setItem('drive_access_token', accessToken);
                 isSignedIn = true;
                 updateDriveButton(true);
-                await syncWithDrive();
+                syncWithDrive();
             }
         });
     }
 
     function handleDriveAuth() {
-        if (isSignedIn) syncWithDrive();
+        if(isSignedIn) syncWithDrive();
         else tokenClient.requestAccessToken({ prompt: 'consent' });
     }
 
-    async function syncWithDrive() {
-        setSyncIndicator('🔄 A sincronizar...');
-        try {
-            const search = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='producer-hub-data.json'&fields=files(id)`, {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            }).then(r => r.json());
+    // --- LÓGICA DE NEGÓCIO ---
+    function calculate() {
+        const rows = [
+            {p: 'p_edicao', q: 'q_edicao', t: 't_edicao'},
+            {p: 'p_captacao', q: 'q_captacao', t: 't_captacao'},
+            {p: 'p_km', q: 'q_km', t: 't_km'}
+        ];
+        let totalSemIva = 0;
+        rows.forEach(row => {
+            const val = (parseFloat(document.getElementById(row.p).value)||0) * (parseFloat(document.getElementById(row.q).value)||0);
+            document.getElementById(row.t).innerText = val.toFixed(2) + " €";
+            totalSemIva += val;
+        });
+        document.getElementById('total-final').innerText = (totalSemIva * 1.23).toFixed(2) + " €";
+    }
 
-            const file = search.files[0];
-            if (file) {
-                driveFileId = file.id;
-                const driveData = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
+    function newProject(el) {
+        currentProjId = null;
+        document.getElementById('project-name').value = "";
+        document.getElementById('q_edicao').value = 0;
+        document.getElementById('q_captacao').value = 0;
+        document.getElementById('q_km').value = 0;
+        seconds = 0;
+        updateTimerDisplay();
+        calculate();
+        showSection('projeto', el);
+    }
+
+    function saveProject() {
+        const name = document.getElementById('project-name').value || "Projeto Sem Nome";
+        const total = parseFloat(document.getElementById('total-final').innerText);
+        
+        const proj = { id: currentProjId || Date.now(), name, total, date: new Date().toLocaleDateString() };
+        
+        const idx = appData.projects.findIndex(p => p.id === proj.id);
+        if(idx > -1) appData.projects[idx] = proj;
+        else appData.projects.push(proj);
+        
+        localStorage.setItem('producer_data', JSON.stringify(appData));
+        updateDashboard();
+        if(isSignedIn) uploadToDrive();
+        showToast("✅ Guardado!");
+    }
+
+    function updateDashboard() {
+        const list = document.getElementById('project-list');
+        const totalFaturado = appData.projects.reduce((acc, p) => acc + p.total, 0);
+        
+        document.getElementById('dash-faturacao').innerText = totalFaturado.toFixed(2) + " €";
+        document.getElementById('dash-projetos').innerText = appData.projects.length;
+        document.getElementById('dash-media').innerText = appData.projects.length ? (totalFaturado/appData.projects.length).toFixed(2) + " €" : "0.00 €";
+        
+        list.innerHTML = appData.projects.slice().reverse().map(p => `
+            <div class="project-item">
+                <span>${p.name} <small>(${p.date})</small></span>
+                <b style="color:var(--primary)">${p.total.toFixed(2)}€</b>
+            </div>
+        `).join('');
+    }
+
+    // --- GOOGLE DRIVE ---
+    async function syncWithDrive() {
+        setSyncStatus('🔄 Sincronizando...');
+        try {
+            const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='producer-hub-data.json'`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            }).then(res => res.json());
+            
+            if(r.files && r.files.length > 0) {
+                driveFileId = r.files[0].id;
+                const data = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
                     headers: { Authorization: `Bearer ${accessToken}` }
-                }).then(r => r.json());
-                
-                // Merge inteligente: Prioriza o que for mais recente
-                appData = driveData;
-                saveToLocalStorage();
+                }).then(res => res.json());
+                appData = data;
+                localStorage.setItem('producer_data', JSON.stringify(appData));
                 updateDashboard();
-                setSyncIndicator('✅ Sincronizado');
+                setSyncStatus('✅ Sincronizado');
             } else {
-                await uploadToDrive();
+                uploadToDrive();
             }
-        } catch (e) { setSyncIndicator('❌ Erro Drive'); }
+        } catch(e) { setSyncStatus('⚠️ Erro Drive'); }
     }
 
     async function uploadToDrive() {
         const metadata = { name: 'producer-hub-data.json', mimeType: 'application/json' };
         const formData = new FormData();
-        formData.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
-        formData.append('file', new Blob([JSON.stringify(appData)], {type: 'application/json'}));
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], {type:'application/json'}));
+        formData.append('file', new Blob([JSON.stringify(appData)], {type:'application/json'}));
 
-        const url = driveFileId 
-            ? `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`
-            : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-
-        const resp = await fetch(url, {
+        fetch(driveFileId ? `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart` : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
             method: driveFileId ? 'PATCH' : 'POST',
             headers: { Authorization: `Bearer ${accessToken}` },
             body: formData
-        }).then(r => r.json());
-        
-        if (resp.id) driveFileId = resp.id;
-        setSyncIndicator('☁️ Guardado no Drive');
+        }).then(res => res.json()).then(res => { driveFileId = res.id; setSyncStatus('✅ Guardado no Drive'); });
     }
 
-    // --- FUNÇÕES DE INTERFACE ---
+    // --- UTILITÁRIOS ---
     function showSection(id, el) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById('section-'+id).classList.add('active');
@@ -241,62 +310,7 @@
         el.classList.add('active');
     }
 
-    function calculate() {
-        const p = parseFloat(document.getElementById('p_edicao').value) || 0;
-        const q = parseFloat(document.getElementById('q_edicao').value) || 0;
-        const sub = p * q;
-        document.getElementById('t_edicao').value = sub.toFixed(2) + " €";
-        document.getElementById('total-iva').innerText = (sub * 1.23).toFixed(2) + " €";
-    }
-
-    function saveProject() {
-        const proj = {
-            id: appData.currentProjectId || Date.now(),
-            name: document.getElementById('project-name').value,
-            total: parseFloat(document.getElementById('t_edicao').value) || 0
-        };
-        const idx = appData.projects.findIndex(p => p.id === proj.id);
-        if(idx > -1) appData.projects[idx] = proj; else appData.projects.push(proj);
-        saveToLocalStorage();
-        updateDashboard();
-        if (isSignedIn) uploadToDrive();
-        showToast("Projeto Guardado!");
-    }
-
-    function loadFromLocalStorage() {
-        const data = localStorage.getItem('producer-hub-data');
-        if (data) appData = JSON.parse(data);
-    }
-    function saveToLocalStorage() { localStorage.setItem('producer-hub-data', JSON.stringify(appData)); }
-    function updateDriveButton(c) { document.getElementById('drive-btn').classList.toggle('connected', c); document.getElementById('drive-btn').innerText = c ? "✅ Drive Ligado" : "🔗 Ligar Google Drive"; }
-    function setSyncIndicator(m) { document.getElementById('sync-indicator').innerText = m; }
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
-    function updateDashboard() {
-        const list = document.getElementById('project-list');
-        list.innerHTML = appData.projects.map(p => `<div class="project-list-item"><span>${p.name}</span><b>${p.total}€</b></div>`).join('');
-        document.getElementById('dash-projetos').innerText = appData.projects.length;
-    }
-    
-    // Timer básico para exemplo
-    let timer, elapsed = 0;
     function toggleTimer() {
         const btn = document.getElementById('btn-timer');
-        if (btn.innerText === "Iniciar Sessão") {
-            btn.innerText = "Pausar"; btn.className = "btn btn-pause";
-            timer = setInterval(() => { elapsed++; updateTimerDisc(); }, 1000);
-        } else {
-            btn.innerText = "Iniciar Sessão"; btn.className = "btn btn-start";
-            clearInterval(timer);
-        }
-    }
-    function updateTimerDisc() {
-        const h = Math.floor(elapsed/3600).toString().padStart(2,'0');
-        const m = Math.floor((elapsed%3600)/60).toString().padStart(2,'0');
-        const s = (elapsed%60).toString().padStart(2,'0');
-        document.getElementById('timer-text').innerText = `${h}:${m}:${s}`;
-        document.getElementById('q_edicao').value = (elapsed/3600).toFixed(2);
-        calculate();
-    }
-</script>
-</body>
-</html>
+        if(btn.innerText.includes("Iniciar")) {
+            btn.innerText = "Pausar Gravação"; btn
